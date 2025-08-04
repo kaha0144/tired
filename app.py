@@ -1,6 +1,6 @@
 import os
 import pickle
-from flask import Flask, request, render_template, redirect, url_for, flash, session, Response
+from flask import Flask, Response, request, render_template, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
