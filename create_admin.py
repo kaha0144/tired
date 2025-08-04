@@ -1,45 +1,43 @@
-import os
-from dotenv import load_dotenv
-from supabase import create_client, Client
+import argparse
+from app import app, db, User, generate_password_hash
 
-# .envファイルを読み込む
-load_dotenv()
+def create_user(username, nickname, password, is_admin=False):
+    """新しいユーザーを作成してデータベースに保存する関数"""
+    with app.app_context():
+        # ユーザーが既に存在するかチェック
+        if User.query.filter_by(username=username).first():
+            print(f"エラー: ユーザー名 '{username}' は既に存在します。")
+            return
 
-# Supabaseクライアントを初期化
-# ★★★ service_roleキーを使うのが重要 ★★★
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_SERVICE_KEY")
-supabase: Client = create_client(url, key)
+        # パスワードをハッシュ化
+        hashed_password = generate_password_hash(
+            password,
+            method="pbkdf2:sha256"
+        )
+        
+        # 新しいユーザーオブジェクトを作成
+        new_user = User(
+            username=username,
+            nickname=nickname,
+            password=hashed_password,
+            is_admin=is_admin
+        )
+        
+        # データベースに保存
+        db.session.add(new_user)
+        db.session.commit()
+        
+        admin_text = " (管理者)" if is_admin else ""
+        print(f"成功: ユーザー '{nickname}'{admin_text} が作成されました。")
 
-# --- 管理者情報を設定 ---
-ADMIN_EMAIL = "admin"  # あなたのメールアドレス
-ADMIN_PASSWORD = "pass"
-ADMIN_NICKNAME = "管理者"
-
-def create_initial_admin():
-    try:
-        # 1. Authにユーザーを登録する（管理者権限で）
-        # email_confirm=Trueにすると、メール認証をスキップして即時有効になる
-        response = supabase.auth.admin.create_user({
-            "email": ADMIN_EMAIL,
-            "password": ADMIN_PASSWORD,
-            "email_confirm": True,
-        })
-        new_user = response.user
-        print(f"✅ Authユーザーを作成しました: {new_user.email}")
-
-        # 2. psgr (profiles) テーブルに情報を登録する
-        profile_data = {
-            "id": new_user.id,
-            "nickname": ADMIN_NICKNAME,
-            "is_admin": True  # is_adminをTrueに設定
-        }
-        data, count = supabase.from_('psgr').insert(profile_data).execute()
-        print(f"✅ プロフィールを作成しました: {data[1][0]['nickname']}")
-
-    except Exception as e:
-        print(f"❌ エラーが発生しました: {e}")
-
-# スクリプトを実行
-if __name__ == "__main__":
-    create_initial_admin()
+if __name__ == '__main__':
+    # コマンドラインから引数を受け取る設定
+    parser = argparse.ArgumentParser(description='新しいユーザーを作成します。')
+    parser.add_argument('username', type=str, help='ログインIDとなるユーザー名')
+    parser.add_argument('nickname', type=str, help='表示されるニックネーム')
+    parser.add_argument('password', type=str, help='ログインパスワード')
+    parser.add_argument('--admin', action='store_true', help='このユーザーを管理者として作成する場合に指定します。')
+    
+    args = parser.parse_args()
+    
+    create_user(args.username, args.nickname, args.password, args.admin)

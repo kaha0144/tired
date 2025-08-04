@@ -1,0 +1,13 @@
+# Python 仮想環境
+venv/
+.env
+__pycache__/
+*.py[cod]
+
+# Git 管理外の大きなファイル
+*.xlsx
+*.db
+*.log
+
+# Git リポジトリ本体
+.git/

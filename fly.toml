@@ -1,0 +1,30 @@
+app = "tanngo-app-clean"
+primary_region = "nrt"
+
+[build]
+  command = "flask db upgrade"
+
+# ← deploy セクションに auto_stop / min_machines を移動
+[deploy]
+  # アイデルでもマシンを止めない
+  auto_stop_machines    = false
+  # 最低 1 台は必ず稼働
+  min_machines_running  = 1
+
+[http_service]
+  internal_port = 8080
+  force_https   = true
+
+  [[http_service.checks]]
+    protocol     = "http"
+    method       = "get"
+    path         = "/health"     
+    interval     = "15s"
+    timeout      = "10s"
+    grace_period = "60s"      
+
+
+[[vm]]
+  memory    = "1gb"
+  cpu_kind  = "shared"
+  cpus      = 1

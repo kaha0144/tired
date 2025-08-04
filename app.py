@@ -1,6 +1,6 @@
 import os
 import pickle
-from flask import Flask, request, render_template, redirect, url_for, flash, session
+from flask import Flask, request, render_template, redirect, url_for, flash, session, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -20,6 +20,10 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+@app.route("/health")
+def health():
+    return Response(status=204)
 
 # --- 環境ごとの設定 ---
 db_url = os.environ.get('DATABASE_URL')
@@ -1511,4 +1515,5 @@ def deleted_messages_page():
     
     # 新しいHTMLテンプレートにデータを渡して表示
     return render_template("deleted_messages.html", contact_msgs=deleted_msgs)
+
 
