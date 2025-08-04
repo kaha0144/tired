@@ -7,16 +7,21 @@ app = 'tanngo-app-clean-v2'
 primary_region = 'nrt'
 
 [build]
-  command = "flask db upgrade"
+ command = "flask db upgrade"
 
 [http_service]
-  # ... 既存の設定はそのまま ...
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
   
   # ▼▼▼ このヘルスチェックのセクションを追記 ▼▼▼
   [[http_service.checks]]
     interval = "15s"
     timeout = "10s"
-    grace_period = "30s"
+    grace_period = "90s"
     method = "get"
     path = "/"
 
